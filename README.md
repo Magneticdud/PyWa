@@ -14,15 +14,37 @@ Uno strumento a riga di comando in Python che converte le esportazioni delle cha
 
 ## Utilizzo
 
-Prima esporta la chat come testo da WhatsApp, poi copiala sul computer ed esegui:
+### Conversione della chat
+
+1. Esporta la chat come file di testo da WhatsApp
+2. Copia il file sul tuo computer
+3. Esegui il seguente comando:
 
 ```bash
 python whatsapp_to_html.py nome_chat.txt
 ```
 
-Ti sarà chiesto il tuo nome per allineare a destra i tuoi messaggi.
+Ti verrà chiesto di inserire il tuo nome per allineare correttamente i tuoi messaggi a destra.
 
-L'output verrà salvato come `nome_chat.html` nella stessa cartella del file di input.
+Il file HTML verrà salvato come `nome_chat.html` nella stessa cartella del file di input.
+
+### Esecuzione dei test
+
+Il progetto include una suite di test per verificare il corretto funzionamento del codice. Per eseguire i test:
+
+```bash
+# Esegui tutti i test
+python run_tests.py
+
+# Oppure esegui un singolo file di test
+python -m tests.test_parser
+python -m tests.test_html_generator
+```
+
+I test verificano:
+- Il corretto parsing dei messaggi
+- La generazione dell'HTML
+- La gestione dei casi particolari (messaggi lunghi, messaggi di sistema, ecc.)
 
 ## Requisiti
 
