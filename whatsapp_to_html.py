@@ -1,7 +1,15 @@
 import re
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
+
+try:
+    from xhtml2pdf import pisa
+    from io import BytesIO
+    HAS_XHTML2PDF = True
+except ImportError:
+    HAS_XHTML2PDF = False
 
 def parse_whatsapp_chat(file_path):
     """
@@ -122,6 +130,44 @@ def parse_whatsapp_chat(file_path):
     except Exception as e:
         print(f"Errore nella lettura del file: {e}")
         return []
+
+def generate_pdf(html_content, output_path):
+    """
+    Genera un file PDF a partire dal contenuto HTML usando xhtml2pdf.
+    
+    Args:
+        html_content: Stringa contenente l'HTML da convertire in PDF
+        output_path: Percorso del file PDF da generare
+    """
+    if not HAS_XHTML2PDF:
+        print("Errore: xhtml2pdf non è installato. Installa con 'pip install xhtml2pdf'")
+        return False
+    
+    try:
+        # Crea un file PDF in memoria
+        result_file = BytesIO()
+        
+        # Converti l'HTML in PDF
+        pisa_status = pisa.CreatePDF(
+            html_content,
+            dest=result_file,
+            encoding='utf-8',
+            link_callback=None
+        )
+        
+        # Se la conversione è andata a buon fine, salva il file
+        if not pisa_status.err:
+            with open(output_path, 'wb') as f:
+                f.write(result_file.getvalue())
+            return True
+        else:
+            print("Errore durante la generazione del PDF")
+            return False
+            
+    except Exception as e:
+        print(f"Errore nella generazione del PDF: {e}")
+        return False
+
 
 def generate_html(messaggi, file_uscita, nome_utente=None):
     """
@@ -292,26 +338,79 @@ def generate_html(messaggi, file_uscita, nome_utente=None):
         f.write(html_content)
 
 def main():
-    if len(sys.argv) != 2:
-        print("Utilizzo: python whatsapp_to_html.py <file_input.txt>")
-        print("Esempio: python whatsapp_to_html.py 'Chat WhatsApp.txt'")
+    if len(sys.argv) < 2:
+        print("Utilizzo: python whatsapp_to_html.py <file_chat_whatsapp> [nome_utente] [--pdf]")
+        print("\nOpzioni:")
+        print("  nome_utente  Nome dell'utente (i cui messaggi verranno allineati a destra)")
+        print("  --pdf         Esporta direttamente in PDF invece di HTML")
+        sys.exit(1)
+        
+    file_input = sys.argv[1]
+    nome_utente = None
+    export_pdf = False
+    
+    # Analisi degli argomenti
+    for arg in sys.argv[2:]:
+        if arg.lower() == '--pdf':
+            export_pdf = True
+        else:
+            nome_utente = arg
+    
+    # Se il nome utente non è stato specificato come argomento, lo chiediamo all'utente
+    if nome_utente is None:
+        nome_utente = input("\nInserisci il tuo nome come appare nella chat (premi Invio per saltare): ").strip()
+        if not nome_utente:
+            print("Nessun nome utente specificato. I messaggi non verranno allineati a destra.")
+        else:
+            print(f"Allineerò i tuoi messaggi a destra. Nome utente: {nome_utente}")
+    
+    if not Path(file_input).exists():
+        print(f"Errore: il file {file_input} non esiste.")
         sys.exit(1)
     
-    # Chiedi all'utente il suo nome per determinare l'allineamento
-    nome_utente = input("Inserisci il tuo nome come appare nella chat (per allineare i tuoi messaggi a destra): ").strip()
+    # Analizza i messaggi
+    messaggi = parse_whatsapp_chat(file_input)
+    if not messaggi:
+        print("Nessun messaggio da esportare.")
+        return
     
-    input_file = sys.argv[1]
-    output_file = str(Path(input_file).with_suffix('.html'))
+    # Genera l'HTML
+    base_name = Path(file_input).stem
+    html_output = base_name + ".html"
     
-    if not Path(input_file).exists():
-        print(f"Errore: Il file '{input_file}' non esiste")
-        sys.exit(1)
-    
-    print(f"Elaborazione della chat WhatsApp da: {input_file}")
-    messages = parse_whatsapp_chat(input_file)
-    generate_html(messages, output_file, nome_utente)
-    print(f"File HTML generato con successo: {output_file}")
-    print("Puoi aprirlo con il tuo browser preferito per visualizzare la chat.")
+    # Se dobbiamo generare direttamente il PDF, creiamo un file HTML temporaneo
+    temp_html = None
+    if export_pdf:
+        temp_html = f"temp_{os.getpid()}.html"
+        generate_html(messaggi, temp_html, nome_utente)
+        
+        # Leggi il contenuto HTML generato
+        try:
+            with open(temp_html, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            
+            # Genera il PDF
+            pdf_output = base_name + ".pdf"
+            if generate_pdf(html_content, pdf_output):
+                print(f"File PDF generato con successo: {pdf_output}")
+            
+            # Elimina il file HTML temporaneo
+            try:
+                os.remove(temp_html)
+            except:
+                pass
+                
+        except Exception as e:
+            print(f"Errore durante la generazione del PDF: {e}")
+            if temp_html and os.path.exists(temp_html):
+                try:
+                    os.remove(temp_html)
+                except:
+                    pass
+    else:
+        # Genera solo HTML
+        generate_html(messaggi, html_output, nome_utente)
+        print(f"File HTML generato con successo: {html_output}")
 
 if __name__ == "__main__":
     main()

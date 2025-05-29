@@ -28,6 +28,24 @@ Ti verrà chiesto di inserire il tuo nome per allineare correttamente i tuoi mes
 
 Il file HTML verrà salvato come `nome_chat.html` nella stessa cartella del file di input.
 
+### Esportazione in PDF (Sperimentale)
+
+È possibile esportare direttamente in PDF utilizzando il flag `--pdf`:
+
+```bash
+python whatsapp_to_html.py nome_chat.txt --pdf
+```
+
+**Nota sulla qualità del PDF**: La generazione del PDF è attualmente in fase sperimentale e la qualità non è ottimale. La formattazione differisce molto dalla versione HTML.
+
+**Dipendenze opzionali**: Per utilizzare l'esportazione in PDF, è necessario installare la dipendenza aggiuntiva:
+
+```bash
+pip install xhtml2pdf
+```
+
+L'installazione di questa dipendenza è necessaria solo se si intende utilizzare la funzionalità di esportazione in PDF. La generazione di file HTML funziona senza dipendenze aggiuntive.
+
 ### Esecuzione dei test
 
 Il progetto include una suite di test per verificare il corretto funzionamento del codice. Per eseguire i test:
