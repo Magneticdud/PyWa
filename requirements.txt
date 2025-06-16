@@ -1,6 +1,6 @@
 arabic-reshaper==3.0.0
 asn1crypto==1.5.1
-certifi==2025.4.26
+certifi==2025.6.15
 cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.2
