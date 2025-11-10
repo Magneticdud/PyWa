@@ -18,7 +18,7 @@ pypdf==5.5.0
 python-bidi==0.6.6
 PyYAML==6.0.2
 reportlab==4.4.1
-requests==2.32.3
+requests==2.32.4
 six==1.17.0
 svglib==1.5.1
 tinycss2==1.4.0
